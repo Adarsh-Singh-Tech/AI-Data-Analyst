@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI Data Analyst</title>
+</head>
+<body>
+
+<h1>📊 AI Data Analyst</h1>
+
+<h3>Upload Dataset</h3>
+<form method="POST" enctype="multipart/form-data">
+    <input type="file" name="file">
+    <button>Upload</button>
+</form>
+
+{% if preview %}
+<h3>Preview (Top 5 Rows)</h3>
+{{ preview | safe }}
+{% endif %}
+
+<h3>Ask Question</h3>
+<form method="POST">
+    <input name="query" placeholder="Ask about data..." style="width:300px;">
+    <button>Analyze</button>
+</form>
+
+{% if code %}
+<h3>Generated Code</h3>
+<pre>{{ code }}</pre>
+
+<h3>Result</h3>
+<pre>{{ result }}</pre>
+{% endif %}
+{% if code %}
+<h3>Generated Code</h3>
+<pre>{{ code }}</pre>
+
+<h3>Result</h3>
+<pre>{{ result }}</pre>
+{% endif %}
+</body>
+</html>
