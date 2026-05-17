@@ -12,31 +12,54 @@ model = genai.GenerativeModel("models/gemini-2.5-flash")
 df = None  # global dataset
 
 
+# ===== Data Analysis =====
+def analyze_data(df):
+    summary = {}
+
+    # Basic info
+    summary["rows"] = df.shape[0]
+    summary["columns"] = df.shape[1]
+
+    # Column types
+    summary["column_types"] = {
+        col: str(df[col].dtype) for col in df.columns
+    }
+
+    # Missing values
+    summary["missing"] = df.isnull().sum().to_dict()
+
+    # Basic stats
+    try:
+        summary["stats"] = df.describe().to_dict()
+    except:
+        summary["stats"] = {}
+
+    return summary
+
+
 # ===== Generate pandas code =====
 def generate_code(user_query, columns):
 
     prompt = f"""
-Generate pandas code.
+You are a pandas expert.
 
 DataFrame name: df
 Columns: {columns[:10]}
 
-Return ONLY python code.
+Write ONLY executable pandas code.
 
-Example:
-df.groupby('region')['sales'].sum()
+Examples:
+df['amount'].mean()
+df.groupby('merchant_category')['amount'].sum()
 
-Question:
-{user_query}
+Question: {user_query}
 """
 
     try:
         response = model.generate_content(prompt)
         code = response.text.strip()
 
-        # Clean markdown formatting if present
         code = code.replace("```python", "").replace("```", "").strip()
-
         return code
 
     except Exception as e:
@@ -45,7 +68,7 @@ Question:
 
 # ===== Safe Execution =====
 def run_code(code, df):
-    if code.startswith("Error"):
+    if "Error" in code:
         return code
 
     try:
@@ -53,6 +76,7 @@ def run_code(code, df):
         return result
     except Exception as e:
         return f"Execution Error: {str(e)}"
+
 
 # ===== ROUTE =====
 @app.route("/", methods=["GET", "POST"])
@@ -72,8 +96,13 @@ def index():
                 df = pd.read_csv(path)
 
                 preview = df.head().to_html()
+                analysis = analyze_data(df)
 
-                return render_template("index.html", preview=preview)
+                return render_template(
+                    "index.html",
+                    preview=preview,
+                    analysis=analysis
+                )
 
         # Query
         if "query" in request.form and df is not None:
@@ -85,6 +114,7 @@ def index():
             return render_template(
                 "index.html",
                 preview=df.head().to_html(),
+                analysis=analyze_data(df),
                 code=code,
                 result=str(result)
             )

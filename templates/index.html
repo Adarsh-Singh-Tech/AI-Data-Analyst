@@ -1,29 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Data Analyst</title>
+    <title>AI Data Analyst</title>
 </head>
 <body>
 
 <h1>📊 AI Data Analyst</h1>
 
+<!-- Upload -->
 <h3>Upload Dataset</h3>
 <form method="POST" enctype="multipart/form-data">
-    <input type="file" name="file">
+    <input type="file" name="file" required>
     <button>Upload</button>
 </form>
 
+<!-- Preview -->
 {% if preview %}
 <h3>Preview (Top 5 Rows)</h3>
 {{ preview | safe }}
 {% endif %}
 
+<!-- Analysis -->
+{% if analysis %}
+<h3>📊 Dataset Summary</h3>
+
+<p><strong>Rows:</strong> {{ analysis.rows }}</p>
+<p><strong>Columns:</strong> {{ analysis.columns }}</p>
+
+<h4>Column Types</h4>
+<ul>
+{% for col, dtype in analysis.column_types.items() %}
+<li>{{ col }} → {{ dtype }}</li>
+{% endfor %}
+</ul>
+
+<h4>Missing Values</h4>
+<ul>
+{% for col, val in analysis.missing.items() %}
+<li>{{ col }} → {{ val }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<!-- Query -->
 <h3>Ask Question</h3>
 <form method="POST">
     <input name="query" placeholder="Ask about data..." style="width:300px;">
     <button>Analyze</button>
 </form>
 
+<!-- Output -->
 {% if code %}
 <h3>Generated Code</h3>
 <pre>{{ code }}</pre>
@@ -31,12 +57,6 @@
 <h3>Result</h3>
 <pre>{{ result }}</pre>
 {% endif %}
-{% if code %}
-<h3>Generated Code</h3>
-<pre>{{ code }}</pre>
 
-<h3>Result</h3>
-<pre>{{ result }}</pre>
-{% endif %}
 </body>
 </html>
