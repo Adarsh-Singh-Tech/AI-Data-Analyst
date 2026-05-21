@@ -56,6 +56,22 @@ The project is designed around three core principles:
 Phase 1 established the core value proposition of the project: **convert natural language data questions into executable Pandas code using Gemini AI**, and return the results to the user through a clean web interface.
 
 The MVP was built as a lean Flask application with a single-page frontend — minimal UI, maximum functionality.
+This screenshot showcases the initial working MVP of the AI Data Analyst platform.
+
+Key capabilities demonstrated:
+- CSV dataset upload
+- Real-time dataset preview
+- Natural language query input
+- AI-generated pandas code execution
+- Dynamic analytical result generation
+
+The system successfully converts user prompts into executable pandas operations using Gemini AI and returns analytical outputs directly from the uploaded dataset.
+
+Example demonstrated:
+- Querying average cardholder age from a fraud detection dataset
+- Automatic generation of:
+  ```python
+  df['cardholder_age'].mean()
 
 ---
 
@@ -172,7 +188,8 @@ code = response.text.strip().strip("```python").strip("```").strip()
 ### 📸 Screenshots (Phase 1)
 
 > **Figure 1.1 — Dataset Upload & Preview**
-> ![Phase 1: Upload & Preview](screenshots/phase1_upload_preview.png)
+> ![Phase 1: Upload & Preview](screenshots/phase1_upload_preview.png<img width="1459" height="796" alt="Screenshot 2026-05-16 at 7 34 33 PM" src="https://github.com/user-attachments/assets/ab645922-29bf-41c0-b0e6-2741ac667335" />
+)
 > *User uploads a CSV file. The interface immediately renders the top 5 rows and basic metadata.*
 
 > **Figure 1.2 — Natural Language Query & Result**
@@ -270,7 +287,8 @@ The `index.html` template was restructured from a single scroll to distinct func
 ### 📸 Screenshots (Phase 2)
 
 > **Figure 2.1 — Full Dataset Profiling Panel**
-> ![Phase 2: Dataset Summary](screenshots/phase2_dataset_summary.png)
+> ![Phase 2: Dataset Summary](screenshots/phase2_dataset_summary.png)<img width="1464" height="798" alt="Screenshot 2026-05-16 at 7 34 41 PM" src="https://github.com/user-attachments/assets/8ad2d42c-ed66-4f6c-8e02-4233cd6a6663" />
+
 > *Automatic profiling immediately after upload: 10,000 rows, 10 columns, complete type map, missing value audit.*
 
 > **Figure 2.2 — Column Types & Missing Values**
