@@ -8,6 +8,7 @@
 [![Gemini](https://img.shields.io/badge/Gemini_API-1.5_Pro-orange?style=flat-square&logo=google)](https://ai.google.dev)
 [![Pandas](https://img.shields.io/badge/Pandas-2.x-purple?style=flat-square&logo=pandas)](https://pandas.pydata.org)
 [![Status](https://img.shields.io/badge/Status-Active_Development-green?style=flat-square)]()
+[![Version](https://img.shields.io/badge/Version-1.3.0-6366F1?style=flat-square)]()
 
 **GitHub:** [github.com/Adarsh-Singh-Tech/AI-Data-Analyst](https://github.com/Adarsh-Singh-Tech/AI-Data-Analyst)
 
@@ -37,6 +38,8 @@ The project is designed around three core principles:
 
 - [Phase 1 — MVP](#phase-1--mvp-natural-language-to-pandas)
 - [Phase 2 — Data Understanding Upgrade](#phase-2--data-understanding-upgrade)
+- [Phase 3 — KPI Dashboard & AI Insights](#phase-3--kpi-dashboard--ai-insights-engine)
+- [Phase 4 — Automated Visualization Engine](#phase-4--automated-visualization-dashboard-engine)
 - [Screenshots](#screenshots)
 - [Tech Stack](#tech-stack)
 - [Current Architecture](#current-architecture)
@@ -305,6 +308,165 @@ The `index.html` template was restructured from a single scroll to distinct func
 
 ---
 
+## 📊 Phase 3 — KPI Dashboard & AI Insights Engine
+
+> **Status:** ✅ Complete  
+> **Released:** May 2026
+
+### Overview
+
+Phase 3 introduced the intelligence presentation layer — transforming raw profiling statistics into an enterprise-style KPI dashboard with AI-generated business commentary. Users no longer read raw numbers; they read structured metric cards and domain-relevant AI observations.
+
+---
+
+### ✅ Features Completed
+
+- [x] **Intelligent KPI Dashboard** — structured metric tile layout replacing the linear profiling output of Phase 2
+- [x] **Total Rows / Columns Metrics** — dataset dimension cards rendered as styled dashboard tiles
+- [x] **Numeric / Categorical Column Detection** — auto-classified column-type counts surfaced as KPI values
+- [x] **Missing Value Monitoring** — per-dataset null count displayed as a dedicated KPI card
+- [x] **AI-Generated Business Insights** — Gemini ingests schema + sample rows and returns 3–5 domain-relevant business observations
+- [x] **Improved UI Structure** — CSS grid dashboard layout with professional card components and improved analytics readability
+
+---
+
+### ⚙️ Technical Implementation
+
+**KPI Generation Engine**
+
+KPI values are computed directly from the profiling pass and passed as structured Jinja2 context variables:
+
+```python
+kpi_data = {
+    "total_rows": profile["rows"],
+    "total_columns": profile["columns"],
+    "numeric_cols": sum(1 for t in profile["column_types"].values() if "int" in t or "float" in t),
+    "categorical_cols": sum(1 for t in profile["column_types"].values() if "object" in t),
+    "missing_total": sum(profile["missing_values"].values())
+}
+```
+
+**Dual-Prompt Gemini Architecture**
+
+Phase 3 introduces a second dedicated Gemini prompt chain for insight generation — separate from the query-generation chain used in Phase 1:
+
+| Chain | Temperature | Purpose |
+|---|---|---|
+| `query_prompt` | `0.1` | Deterministic NL → Pandas code generation |
+| `insight_prompt` | `0.4` | Schema-aware business insight generation |
+
+The insight prompt passes full schema context — column names, dtypes, null rates, and 3-row sample — enabling domain-specific observations rather than generic commentary.
+
+---
+
+### 🔬 Engineering Notes
+
+- KPI cards are rendered using a CSS grid template — mobile-responsive, scales from 2 to 4 columns based on viewport
+- `temperature=0.4` on insight chain allows analytical language without hallucinating quantitative facts
+- Both KPI generation and insight generation run synchronously within the `/upload` POST handler — will be moved to async for large files in a future phase
+- Column type classification uses a dtype mapping dict: `int64 → Integer`, `float64 → Decimal`, `object → Text`, `bool → Boolean`
+
+---
+
+### 📸 Screenshots (Phase 3)
+
+> **Figure 3.1 — KPI Dashboard Overview**
+> ![Phase 3: KPI Dashboard](screenshots/phase3_kpi_dashboard.png)
+> *Enterprise-style KPI metric cards rendered immediately on upload — total rows, columns, numeric/categorical breakdown, and missing value count. Converts raw profiling data into an executive-readable analytics overview.*
+
+> **Figure 3.2 — AI-Generated Business Insights Panel**
+> ![Phase 3: AI Insights](screenshots/phase3_ai_insights.png)
+> *Gemini produces 3–5 domain-relevant business observations from dataset schema and sample rows — surfacing data quality issues, analytical opportunities, and anomalies without user prompting.*
+
+---
+
+## 📈 Phase 4 — Automated Visualization Dashboard Engine
+
+> **Status:** ✅ Complete  
+> **Released:** May 2026
+
+### Overview
+
+Phase 4 introduced a fully automated visual analytics layer. The platform now generates a complete chart suite from any uploaded dataset — chart types are selected and rendered automatically based on column semantics detected during profiling. No user configuration required.
+
+---
+
+### ✅ Features Completed
+
+- [x] **Automated Histogram Generation** — distribution analysis rendered for all detected numeric columns
+- [x] **Correlation Heatmap** — Seaborn pairwise feature correlation matrix across all numeric features
+- [x] **Gender Distribution Pie Chart** — proportion split rendered when a binary categorical column is detected
+- [x] **Payment Method Analytics** — horizontal bar chart for multi-value transactional category columns
+- [x] **Country-Wise Sales Visualization** — geographic revenue distribution sorted by value
+- [x] **AI Visual Analytics Dashboard** — full chart suite assembled into a single-scroll dashboard view
+
+---
+
+### ⚙️ Technical Implementation
+
+**Automated Chart Generation Pipeline**
+
+Chart type assignment is driven by column semantics detected during the Phase 2 profiling pass:
+
+| Column Semantic | Chart Type | Library |
+|---|---|---|
+| Numeric (continuous) | Histogram | Matplotlib |
+| ≥2 numeric columns | Correlation Heatmap | Seaborn |
+| Binary categorical (e.g. `Gender`) | Pie Chart | Matplotlib |
+| Multi-value categorical (e.g. `Payment Method`) | Horizontal Bar Chart | Matplotlib |
+| Geographic (`Country`, `Region`) | Sorted Bar Chart | Matplotlib |
+
+**Inline Chart Rendering — Base64 Pipeline**
+
+All charts are rendered server-side and injected into the template as base64-encoded PNGs — no file writes, no external storage dependency:
+
+```python
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend — must be set before pyplot import
+import matplotlib.pyplot as plt
+import io, base64
+
+buf = io.BytesIO()
+plt.savefig(buf, format='png', bbox_inches='tight')
+buf.seek(0)
+chart_b64 = base64.b64encode(buf.read()).decode('utf-8')
+plt.close()
+# Injected into template as: <img src="data:image/png;base64,{{ chart_b64 }}">
+```
+
+**Dataset Capabilities Added**
+
+Phase 4 expanded tested dataset support to include enterprise-grade schemas:
+
+- **Geographical intelligence** — country, state, city column detection and aggregation
+- **Transportation analytics** — mode-of-shipment and logistics field classification
+- **Currency conversion analysis** — multi-currency sales field handling
+- **Enterprise sales intelligence** — profit margin, revenue, returns, and discount field support
+- **Customer segmentation** — demographic and behavioural column classification
+
+---
+
+### 🔬 Engineering Notes
+
+- `matplotlib.use('Agg')` must be called before any `pyplot` import — resolves `NSInternalInconsistencyException` on macOS server contexts (see Challenges Solved §3)
+- Each chart is generated in its own `plt.figure()` context and explicitly closed with `plt.close()` after encoding — prevents memory accumulation across multiple uploads in the same server process
+- Column semantic detection uses dtype + column-name substring matching (`'country'`, `'gender'`, `'payment'` etc.) — deterministic, no AI call required for chart routing
+- Seaborn heatmap uses `annot=True` with 2 decimal places — correlation coefficients rendered directly on cells for readability without additional legend
+
+---
+
+### 📸 Screenshots (Phase 4)
+
+> **Figure 4.1 — Automated Visualization Dashboard**
+> ![Phase 4: Visualization Dashboard](screenshots/phase4_visualizations.png)
+> *Full automated chart suite rendered on upload — histograms, Seaborn correlation heatmap, demographic pie charts, and categorical bar analytics assembled into a single BI-style dashboard. Zero user chart configuration required.*
+
+> **Figure 4.2 — Geographic Sales Analytics**
+> ![Phase 4: Geographic Analytics](screenshots/phase4_geographic_analytics.png)
+> *Country-wise sales distribution rendered as a sorted bar chart — geographic intelligence surface from any dataset containing a country or region column. Enables instant regional performance comparison without any manual query.*
+
+---
+
 ## 🖼️ Screenshots
 
 All screenshots are stored in the `screenshots/` directory at the project root.
@@ -317,7 +479,11 @@ AI-Data-Analyst/
     ├── phase2_dataset_summary.png      # Phase 2: Full profiling panel
     ├── phase2_column_types.png         # Phase 2: Column type & null audit
     ├── phase2_ai_insights.png          # Phase 2: Gemini business insights
-    └── phase2_query_result.png         # Phase 2: Updated query UI
+    ├── phase2_query_result.png         # Phase 2: Updated query UI
+    ├── phase3_kpi_dashboard.png        # Phase 3: KPI cards + AI insights panel
+    ├── phase3_ai_insights.png          # Phase 3: Gemini business intelligence output
+    ├── phase4_visualizations.png       # Phase 4: Full automated chart dashboard
+    └── phase4_geographic_analytics.png # Phase 4: Country-wise sales visualization
 ```
 
 > 📌 *Screenshots from the actual running application (127.0.0.1:8000) showing a 10,000-row financial transaction dataset with columns: transaction_id, amount, transaction_hour, merchant_category, foreign_transaction, location_mismatch, device_trust_score, velocity_last_24h, cardholder_age, is_fraud.*
@@ -332,6 +498,7 @@ AI-Data-Analyst/
 | **Web Framework** | Flask 2.x | HTTP routing, file handling, template rendering |
 | **Data Layer** | Pandas 2.x | DataFrame operations, profiling, query execution |
 | **AI Engine** | Google Gemini API (`gemini-1.5-pro`) | NL→Code generation, dataset insight generation |
+| **Visualization** | Matplotlib 3.x + Seaborn | Automated chart generation — histograms, heatmaps, pie, bar, geographic |
 | **Frontend** | HTML5 / CSS3 | Single-page interface, no JS framework dependencies |
 | **Templating** | Jinja2 (Flask built-in) | Dynamic HTML rendering from Python data |
 | **File Storage** | Local filesystem (`/uploads/`) | Temporary CSV storage per session |
@@ -344,6 +511,9 @@ flask>=2.3.0
 pandas>=2.0.0
 google-generativeai>=0.5.0
 python-dotenv>=1.0.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+openpyxl>=3.1.0
 werkzeug>=2.3.0
 ```
 
@@ -492,27 +662,37 @@ result = safe_locals.get("result", "No result variable set.")
 
 ```
 Phase 1  ──► Phase 2  ──► Phase 3  ──► Phase 4  ──► Phase 5
-  MVP         Data          Auto          BI          Multi-
- (Done)     Profiling     Visuals     Intelligence    Agent
-             (Done)      (Next →)     (Future)      (Vision)
+  MVP         Data          KPI &         Auto          Multi-
+ (Done)     Profiling     Insights      Visuals         Agent
+             (Done)        (Done)        (Done)        (Vision)
 ```
 
 ---
 
-### Phase 3 — Auto Visualizations & Data Cleaning Engine
-> **Target:** Q3 2026 | **Priority:** High
+### Phase 3 — KPI Dashboard & AI Insights Engine
+> **Target:** Q2 2026 | **Priority:** High | **Status:** ✅ Complete
 
 | Feature | Description | Status |
 |---|---|---|
-| 📈 Auto Chart Generation | AI selects appropriate chart type (bar, histogram, scatter, heatmap) based on question context | 🔲 Planned |
-| 🧹 Data Cleaning Engine | Detect and offer to fix: nulls, duplicates, type mismatches, outliers | 🔲 Planned |
-| 🖼️ Chart Download | Export generated charts as PNG/SVG | 🔲 Planned |
-| ⚡ Async Processing | Move heavy operations to background threads for large datasets | 🔲 Planned |
-| 📋 Query History | Persist previous questions and results within a session | 🔲 Planned |
+| 📊 KPI Dashboard | Intelligent metric cards — rows, columns, type breakdown, missing value count | ✅ Complete |
+| 🤖 AI Business Insights | Gemini-generated domain-relevant business observations from schema | ✅ Complete |
+| 🎨 Dashboard UI | Professional card layout replacing linear profiling output | ✅ Complete |
+| 📈 Numeric / Categorical Detection | Auto-classified column counts surfaced as KPI tiles | ✅ Complete |
+| 🔍 Missing Value Monitoring | Per-dataset null monitoring with dedicated KPI card | ✅ Complete |
 
----
+### Phase 4 — Automated Visualization Dashboard Engine
+> **Target:** Q2 2026 | **Priority:** High | **Status:** ✅ Complete
 
-### Phase 4 — PDF Reports & Dashboard Analytics
+| Feature | Description | Status |
+|---|---|---|
+| 📉 Histogram Generation | Automatic distribution analysis for all numeric columns | ✅ Complete |
+| 🔥 Correlation Heatmap | Seaborn pairwise feature correlation matrix | ✅ Complete |
+| 🥧 Segmentation Pie Charts | Gender, binary, and categorical proportion splits | ✅ Complete |
+| 📊 Payment Method Analytics | Multi-value categorical bar chart rendering | ✅ Complete |
+| 🗺️ Geographic Sales Analytics | Country-wise revenue distribution sorted bar charts | ✅ Complete |
+| ⚡ Inline Chart Rendering | Base64 PNG encoding — no file writes, no CDN dependency | ✅ Complete |
+
+### Phase 5 — PDF Reports & Dashboard Analytics
 > **Target:** Q4 2026 | **Priority:** Medium
 
 | Feature | Description | Status |
@@ -551,11 +731,13 @@ Gemini Integration    ███████████████████�
 Safe Code Execution   ████████████████████  100% ✅
 Dataset Profiling     ████████████████████  100% ✅
 AI Business Insights  ████████████████████  100% ✅
+KPI Dashboard         ████████████████████  100% ✅
+Auto Visualizations   ████████████████████  100% ✅
 
 In Development
 ──────────────
-Auto Visualizations   ░░░░░░░░░░░░░░░░░░░░    0% 🔲
 Data Cleaning Engine  ░░░░░░░░░░░░░░░░░░░░    0% 🔲
+Chart Export          ░░░░░░░░░░░░░░░░░░░░    0% 🔲
 PDF Export            ░░░░░░░░░░░░░░░░░░░░    0% 🔲
 SQL Generation        ░░░░░░░░░░░░░░░░░░░░    0% 🔲
 Dashboard View        ░░░░░░░░░░░░░░░░░░░░    0% 🔲
