@@ -4,8 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import seaborn as sns
+from matplotlib.figure import Figure
 import io
 import base64
 import json
@@ -151,120 +150,312 @@ def run_gemini_analysis(profile):
         return generate_mock_ai_analysis(profile)
 
 def generate_visualizations(df):
-    """Generates an executive-grade suite of dark-theme dashboard charts."""
-    plt.style.use('dark_background')
+
     fig_data = {}
-    
+
     bg_color = '#0b111e'
     text_color = '#cbd5e1'
-    
+
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
     categorical_cols = df.select_dtypes(include=[object, 'category']).columns.tolist()
-    
-    # Chart 1: Distribution Analysis
+
+    # ------------------------------------------------
+    # Chart 1 — Distribution
+    # ------------------------------------------------
+
     try:
-        fig, ax = plt.subplots(figsize=(6, 4.5), facecolor=bg_color)
+
+        fig = Figure(figsize=(6, 4.5), facecolor=bg_color)
+        ax = fig.subplots()
+
         ax.set_facecolor(bg_color)
+
         if len(numeric_cols) > 0:
-            sns.histplot(df[numeric_cols[0]], kde=True, color='#38bdf8', ax=ax, bins=25, edgecolor='#1e293b')
-            ax.set_title(f"Distribution of {numeric_cols[0].replace('_', ' ').title()}", color=text_color, fontsize=12, pad=15)
+
+            clean_data = df[numeric_cols[0]].dropna()
+
+            counts, bins = np.histogram(clean_data, bins=20)
+
+            ax.bar(
+                bins[:-1],
+                counts,
+                width=np.diff(bins),
+                color='#38bdf8',
+                edgecolor='#1e293b',
+                align='edge'
+            )
+
+            ax.set_title(
+                f"Distribution of {numeric_cols[0]}",
+                color=text_color,
+                fontsize=12
+            )
+
         else:
-            ax.text(0.5, 0.5, "No Numeric Columns Found", ha='center', va='center', color=text_color)
-        
+
+            ax.text(
+                0.5,
+                0.5,
+                "No Numeric Columns Found",
+                ha='center',
+                va='center',
+                color=text_color,
+                transform=ax.transAxes
+            )
+
         ax.tick_params(colors=text_color)
-        for spine in ax.spines.values():
-            spine.set_color('#334155')
-        plt.tight_layout()
-        
+
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', facecolor=bg_color, dpi=120)
+
+        fig.savefig(
+            buf,
+            format='png',
+            bbox_inches='tight',
+            dpi=120
+        )
+
         buf.seek(0)
-        fig_data['chart_dist'] = base64.b64encode(buf.read()).decode('utf-8')
-        plt.close()
+
+        fig_data['chart_dist'] = base64.b64encode(
+            buf.read()
+        ).decode('utf-8')
+
     except Exception as e:
-        print(f"Error Chart 1: {e}")
+
+        print("Chart 1 Error:", e)
+
         fig_data['chart_dist'] = ""
 
-    # Chart 2: Sequence / Volume Trends
+    # ------------------------------------------------
+    # Chart 2 — Trend Analysis
+    # ------------------------------------------------
+
     try:
-        fig, ax = plt.subplots(figsize=(6, 4.5), facecolor=bg_color)
+
+        fig = Figure(figsize=(6, 4.5), facecolor=bg_color)
+        ax = fig.subplots()
+
         ax.set_facecolor(bg_color)
+
         if len(numeric_cols) > 0:
-            target_col = numeric_cols[0]
-            ax.plot(df[target_col].head(100).values, color='#818cf8', linewidth=2.5, label='Sequential Index Value')
-            ax.fill_between(range(len(df[target_col].head(100))), df[target_col].head(100).values, color='#818cf8', alpha=0.15)
-            ax.set_title("Operational Trend Matrix (Sample)", color=text_color, fontsize=12, pad=15)
-            ax.legend(facecolor=bg_color, edgecolor='#334155', labelcolor=text_color)
+
+            series = (
+                df[numeric_cols[0]]
+                .head(100)
+                .fillna(0)
+            )
+
+            ax.plot(
+                series.values,
+                color='#818cf8',
+                linewidth=2.5
+            )
+
+            ax.fill_between(
+                range(len(series)),
+                series.values,
+                alpha=0.15,
+                color='#818cf8'
+            )
+
+            ax.set_title(
+                "Operational Trend Matrix",
+                color=text_color,
+                fontsize=12
+            )
+
         else:
-            ax.text(0.5, 0.5, "No Trend Indicators Available", ha='center', va='center', color=text_color)
-        
+
+            ax.text(
+                0.5,
+                0.5,
+                "No Trend Indicators Available",
+                ha='center',
+                va='center',
+                color=text_color,
+                transform=ax.transAxes
+            )
+
         ax.tick_params(colors=text_color)
-        for spine in ax.spines.values():
-            spine.set_color('#334155')
-        plt.tight_layout()
-        
+
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', facecolor=bg_color, dpi=120)
+
+        fig.savefig(
+            buf,
+            format='png',
+            bbox_inches='tight',
+            dpi=120
+        )
+
         buf.seek(0)
-        fig_data['chart_trend'] = base64.b64encode(buf.read()).decode('utf-8')
-        plt.close()
+
+        fig_data['chart_trend'] = base64.b64encode(
+            buf.read()
+        ).decode('utf-8')
+
     except Exception as e:
-        print(f"Error Chart 2: {e}")
+
+        print("Chart 2 Error:", e)
+
         fig_data['chart_trend'] = ""
 
-    # Chart 3: Categorical Segment Mix
+    # ------------------------------------------------
+    # Chart 3 — Category Analysis
+    # ------------------------------------------------
+
     try:
-        fig, ax = plt.subplots(figsize=(6, 4.5), facecolor=bg_color)
+
+        fig = Figure(figsize=(6, 4.5), facecolor=bg_color)
+        ax = fig.subplots()
+
         ax.set_facecolor(bg_color)
+
         if len(categorical_cols) > 0:
+
             cat_col = categorical_cols[0]
-            val_counts = df[cat_col].value_counts().head(8)
-            sns.barplot(x=val_counts.values, y=[str(x) for x in val_counts.index], ax=ax, palette="crest", edgecolor='#1e293b')
-            ax.set_title(f"Segment Mix: {cat_col.replace('_', ' ').title()}", color=text_color, fontsize=12, pad=15)
+
+            val_counts = (
+                df[cat_col]
+                .astype(str)
+                .value_counts()
+                .head(8)
+            )
+
+            y_pos = np.arange(len(val_counts))
+
+            ax.barh(
+                y_pos,
+                val_counts.values,
+                color='#34d399'
+            )
+
+            ax.set_yticks(y_pos)
+
+            ax.set_yticklabels(
+                val_counts.index,
+                color=text_color
+            )
+
+            ax.set_title(
+                f"Segment Mix: {cat_col}",
+                color=text_color,
+                fontsize=12
+            )
+
         else:
-            ax.text(0.5, 0.5, "No Category Elements Found", ha='center', va='center', color=text_color)
-            
+
+            ax.text(
+                0.5,
+                0.5,
+                "No Category Data Found",
+                ha='center',
+                va='center',
+                color=text_color,
+                transform=ax.transAxes
+            )
+
         ax.tick_params(colors=text_color)
-        for spine in ax.spines.values():
-            spine.set_color('#334155')
-        plt.tight_layout()
-        
+
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', facecolor=bg_color, dpi=120)
+
+        fig.savefig(
+            buf,
+            format='png',
+            bbox_inches='tight',
+            dpi=120
+        )
+
         buf.seek(0)
-        fig_data['chart_segment'] = base64.b64encode(buf.read()).decode('utf-8')
-        plt.close()
+
+        fig_data['chart_segment'] = base64.b64encode(
+            buf.read()
+        ).decode('utf-8')
+
     except Exception as e:
-        print(f"Error Chart 3: {e}")
+
+        print("Chart 3 Error:", e)
+
         fig_data['chart_segment'] = ""
 
-    # Chart 4: Heatmap Matrix
+    # ------------------------------------------------
+    # Chart 4 — Correlation Matrix
+    # ------------------------------------------------
+
     try:
-        fig, ax = plt.subplots(figsize=(6, 4.5), facecolor=bg_color)
+
+        fig = Figure(figsize=(6, 4.5), facecolor=bg_color)
+        ax = fig.subplots()
+
         ax.set_facecolor(bg_color)
-        if len(numeric_cols) > 1:
-            corr_mat = df[numeric_cols[:6]].corr()
-            sns.heatmap(corr_mat, annot=True, cmap="mako", fmt=".2f", ax=ax, cbar=False, annot_kws={"size": 9})
-            ax.set_title("Feature Correlation Matrix", color=text_color, fontsize=12, pad=15)
+
+        if len(numeric_cols) >= 2:
+
+            corr = (
+                df[numeric_cols[:5]]
+                .corr()
+            )
+
+            heatmap = ax.imshow(
+                corr,
+                cmap='coolwarm'
+            )
+
+            ax.set_xticks(range(len(corr.columns)))
+            ax.set_yticks(range(len(corr.columns)))
+
+            ax.set_xticklabels(
+                corr.columns,
+                rotation=45,
+                color=text_color
+            )
+
+            ax.set_yticklabels(
+                corr.columns,
+                color=text_color
+            )
+
+            fig.colorbar(heatmap)
+
+            ax.set_title(
+                "Feature Correlation Matrix",
+                color=text_color,
+                fontsize=12
+            )
+
         else:
-            ax.text(0.5, 0.5, "Insufficient Dimensions for Matrix Mapping", ha='center', va='center', color=text_color)
-            
-        ax.tick_params(colors=text_color)
-        for spine in ax.spines.values():
-            spine.set_color('#334155')
-        plt.tight_layout()
-        
+
+            ax.text(
+                0.5,
+                0.5,
+                "Insufficient Numeric Columns",
+                ha='center',
+                va='center',
+                color=text_color,
+                transform=ax.transAxes
+            )
+
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', facecolor=bg_color, dpi=120)
+
+        fig.savefig(
+            buf,
+            format='png',
+            bbox_inches='tight',
+            dpi=120
+        )
+
         buf.seek(0)
-        fig_data['chart_corr'] = base64.b64encode(buf.read()).decode('utf-8')
-        plt.close()
+
+        fig_data['chart_corr'] = base64.b64encode(
+            buf.read()
+        ).decode('utf-8')
+
     except Exception as e:
-        print(f"Error Chart 4: {e}")
+
+        print("Chart 4 Error:", e)
+
         fig_data['chart_corr'] = ""
 
     return fig_data
-
 @app.route('/')
 def index():
     return render_template('index.html')
