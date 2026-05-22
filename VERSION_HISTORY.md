@@ -357,6 +357,7 @@ Session Persistence     ░░░░░░░░░░░░░░░░░░�
 
 This release transformed the AI Data Analyst platform from a local analytical prototype into a production-grade cloud-deployed AI analytics SaaS application.
 
+Live APP link https://ai-data-analyst-lz7j.onrender.com/
 ---
 
 ## ☁️ Deployment Infrastructure
