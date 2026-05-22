@@ -16,3 +16,4 @@ static/charts/
 
 # Environment Variables
 .env
+analytics.db
