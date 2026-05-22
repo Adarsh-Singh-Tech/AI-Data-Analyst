@@ -785,6 +785,10 @@ body {
     gap: 0.8rem;
     font-size: 0.9rem;
 }
-
+.chart-img{
+    width:100%;
+    display:block;
+    border-radius:16px;
+}
 .txt-cyan { color: var(--primary); }
 .txt-red { color: var(--neon-red); }
